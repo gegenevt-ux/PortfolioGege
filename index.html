@@ -4,22 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Getúlio Neves Tavares | Portfólio</title>
+    <meta name="description" content="Portfólio de Getúlio Neves Tavares, estudante de Sistemas de Informação: projetos de front-end, Python e C#.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
-    <header>
-        <div class="container">
-            <h1>Getúlio Neves Tavares</h1>
-            <p>Estudante de Sistemas de Informação</p>
-        </div>
-    </header>
+    <a class="pular" href="#projetos">Pular para os projetos</a>
 
-    <nav>
-        <div class="container">
+    <nav class="topo" aria-label="Seções">
+        <div class="container topo-linha">
+            <a class="marca" href="#inicio">Getúlio Tavares</a>
             <ul>
-                <li><a href="#sobre">Sobre</a></li>
                 <li><a href="#projetos">Projetos</a></li>
                 <li><a href="#habilidades">Habilidades</a></li>
                 <li><a href="#contato">Contato</a></li>
@@ -27,101 +24,115 @@
         </div>
     </nav>
 
-    <section id="sobre" class="container">
-        <div class="profile">
-            <img src="assets/profile.jpg" alt="Foto de Getúlio Tavares" class="profile-img">
-            <div class="profile-text">
-                <h2>Sobre Mim</h2>
-                <p>Olá! Sou Getúlio, estudante de Sistemas de Informação apaixonado por tecnologia e desenvolvimento de software. Estou no início da minha jornada na programação e busco constantemente aprender novas tecnologias e melhorar minhas habilidades.</p>
-                <p>Atualmente estou focado em aprender desenvolvimento web e conceitos fundamentais de programação.</p>
-            </div>
+    <header id="inicio" class="container hero">
+        <h1>Getúlio<br>Neves Tavares</h1>
+        <p class="hero-texto">
+            Estudante de Sistemas de Informação. Faço interfaces web, estudo banco de dados
+            e ciência de dados, e estou começando em back-end com Python e C#.
+        </p>
+        <div class="hero-acoes">
+            <a class="botao" href="#projetos">Ver projetos</a>
+            <a class="botao botao-secundario" href="https://github.com/gegenevt-ux" target="_blank" rel="noopener">Abrir meu GitHub</a>
         </div>
-    </section>
+    </header>
 
-    <section id="projetos" class="container">
-        <h2>Meus Projetos</h2>
-        <div class="projects-grid">
-            
-            <div class="project-card">
-                <img src="assets/projects/login-page.jpg" alt="Página de Login">
-                <h3>Página de Login</h3>
-                <p>Página de login responsiva criada com HTML e CSS.</p>
-                <a href="#" class="btn">Ver Projeto</a>
-            </div>
-            
-            <div class="project-card">
-                <img src="assets/projects/placeholder.jpg" alt="Projeto em Andamento">
-                <h3>Calculadora JavaScript</h3>
-                <p>Calculadora simples desenvolvida com HTML, CSS e JavaScript.</p>
-                <a href="#" class="btn">Em Desenvolvimento</a>
-            </div>
-            
-            <div class="project-card">
-                <img src="assets/projects/placeholder.jpg" alt="Projeto Futuro">
-                <h3>Portfólio GitHub</h3>
-                <p>Este projeto de portfólio que você está vendo!</p>
-                <a href="#" class="btn">Ver Código</a>
-            </div>
-        </div>
-    </section>
+    <main>
+        <section id="projetos" class="container secao">
+            <h2>Projetos</h2>
+            <p class="secao-intro">Trabalhos da faculdade e estudos pessoais. O código de todos está aberto no GitHub.</p>
 
-    <section id="habilidades" class="container">
-        <h2>Habilidades</h2>
-        <div class="skills">
-            <div class="skill-category">
-                <h3>Linguagens</h3>
-                <ul>
-                    <li>HTML5</li>
-                    <li>CSS3</li>
-                    <li>JavaScript (Básico)</li>
-                    <li>Java (Básico)</li>
-                </ul>
-            </div>
-            
-            <div class="skill-category">
-                <h3>Ferramentas</h3>
-                <ul>
-                    <li>Git & GitHub</li>
-                    <li>VS Code</li>
-                    <li>Figma (Básico)</li>
-                </ul>
-            </div>
-            
-            <div class="skill-category">
-                <h3>Em Aprendizado</h3>
-                <ul>
-                    <li>React</li>
-                    <li>Node.js</li>
-                    <li>Banco de Dados</li>
-                </ul>
-            </div>
-        </div>
-    </section>
+            <ul class="projetos">
+                <li>
+                    <a class="projeto" href="https://github.com/gegenevt-ux/Prototipo---Extens-o-I" target="_blank" rel="noopener">
+                        <h3>EcoAction</h3>
+                        <p>Protótipo de um app que conecta voluntários a ações socioambientais: feed de ações, inscrição, chat e painel do organizador. Feito no projeto de Extensão I.</p>
+                        <span class="tecnologias">HTML, CSS e JavaScript</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="projeto" href="https://github.com/gegenevt-ux/Sistema_Gest-o_Academia" target="_blank" rel="noopener">
+                        <h3>Gestão de Academia</h3>
+                        <p>Site de uma academia com cadastro e listagem de alunos e instrutores, tema claro e escuro.</p>
+                        <span class="tecnologias">HTML e Bootstrap</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="projeto" href="https://github.com/gegenevt-ux/COONEXAOTECH" target="_blank" rel="noopener">
+                        <h3>Catálogo de Karaokê</h3>
+                        <p>Aplicação para navegar por um catálogo de músicas de karaokê e encontrar a próxima para cantar.</p>
+                        <span class="tecnologias">Python, Streamlit e pandas</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="projeto" href="https://github.com/gegenevt-ux/SapiensBankGG" target="_blank" rel="noopener">
+                        <h3>SapiensBank</h3>
+                        <p>Banco no terminal: criar conta, listar contas, sacar, depositar e ajustar limite. Projeto acadêmico de orientação a objetos.</p>
+                        <span class="tecnologias">C# e .NET</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="projeto" href="https://github.com/gegenevt-ux/mockup_sistema_vendas" target="_blank" rel="noopener">
+                        <h3>Sistema de Vendas</h3>
+                        <p>Mockup da navegação de um sistema de vendas, com áreas de clientes, produtos e pedidos. Em andamento.</p>
+                        <span class="tecnologias">HTML e Bootstrap</span>
+                    </a>
+                </li>
+            </ul>
+        </section>
 
-    <section id="contato" class="container">
-        <h2>Contato</h2>
-        <div class="contact">
-            <p>Estou aberto a oportunidades de aprendizado e colaboração!</p>
-            <div class="contact-links">
-                <a href="mailto:seuemail@exemplo.com" class="btn">
-                    <i class="fas fa-envelope"></i> Email
-                </a>
-                <a href="https://github.com/getuliotavares" target="_blank" class="btn">
-                    <i class="fab fa-github"></i> GitHub
-                </a>
-                <a href="#" class="btn">
-                    <i class="fab fa-linkedin"></i> LinkedIn
-                </a>
-            </div>
-        </div>
-    </section>
+        <section id="habilidades" class="container secao">
+            <h2>Habilidades</h2>
+            <p class="secao-intro">Separei pelo que já uso, pelo que estou estudando e pelo que quero conhecer melhor.</p>
 
-    <footer>
+            <div class="niveis">
+                <div class="nivel">
+                    <h3>Uso com frequência</h3>
+                    <ul>
+                        <li>HTML e CSS</li>
+                        <li>Bootstrap</li>
+                        <li>Git e GitHub</li>
+                        <li>Figma</li>
+                        <li>VS Code</li>
+                    </ul>
+                </div>
+                <div class="nivel">
+                    <h3>Estou aprendendo</h3>
+                    <ul>
+                        <li>JavaScript</li>
+                        <li>Python</li>
+                        <li>C#</li>
+                        <li>Java</li>
+                        <li>Banco de dados e SQL</li>
+                    </ul>
+                </div>
+                <div class="nivel">
+                    <h3>Quero explorar</h3>
+                    <ul>
+                        <li>Ciência de dados</li>
+                        <li>React</li>
+                        <li>Node.js</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <section id="contato" class="container secao contato">
+            <h2>Contato</h2>
+            <p class="contato-texto">Estou aberto a estágio, projetos em grupo e a trocar ideia sobre tecnologia.</p>
+            <div class="hero-acoes">
+                <a class="botao" href="https://github.com/gegenevt-ux" target="_blank" rel="noopener">Falar comigo pelo GitHub</a>
+                <!-- Para adicionar e-mail ou LinkedIn, copie a linha abaixo, tire os sinais de comentário e troque o link:
+                <a class="botao botao-secundario" href="https://www.linkedin.com/in/SEU-USUARIO" target="_blank" rel="noopener">Ver meu LinkedIn</a>
+                <a class="botao botao-secundario" href="mailto:SEU-EMAIL">Enviar e-mail</a>
+                -->
+            </div>
+        </section>
+    </main>
+
+    <footer class="rodape">
         <div class="container">
-            <p>&copy; 2023 Getúlio Neves Tavares</p>
+            <p>&copy; 2026 Getúlio Neves Tavares</p>
         </div>
     </footer>
-
-    <script src="script.js"></script>
 </body>
 </html>
