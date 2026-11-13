@@ -469,22 +469,28 @@
                 ] },
             ],
         },
-        vendas: {
-            titulo: 'Sistema de Vendas',
+        carvao: {
+            titulo: 'Carvão na Brasa',
             abas: [
                 { nome: 'Resumo', texto: [
-                    'Mockup da navegação de um sistema de vendas, com áreas de clientes, produtos e pedidos.',
+                    'Loja online de carvão para churrasco. O cliente escolhe o saco, monta o carrinho e faz o pedido sem precisar mandar mensagem.',
+                    'O front-end da loja está navegável e a API já tem cadastro, login, produtos e pedidos. Falta ligar as duas partes: por enquanto o site simula pedidos e sessão no próprio navegador.',
                 ], nota: 'Em andamento' },
                 { nome: 'Funcionalidades', lista: [
-                    'Cadastro e listagem de clientes',
-                    'Cadastro e listagem de produtos',
-                    'Cadastro e listagem de pedidos',
-                    'Tema claro e escuro',
+                    'Catálogo e página de cada produto',
+                    'Carrinho salvo no navegador',
+                    'Finalização do pedido com entrega ou retirada',
+                    'Cadastro e login de cliente',
+                    'Meus pedidos, com status: pendente, preparando, pronto, concluído ou cancelado',
+                    'Tela de pedidos para o comerciante',
+                    'Contato pelo WhatsApp',
                 ] },
                 { nome: 'Por dentro', lista: [
-                    'Sete páginas em HTML',
-                    'Layout e componentes do Bootstrap',
-                    'Menu de navegação entre as áreas',
+                    'Front-end em HTML, CSS e JavaScript puro, com um arquivo de script por página',
+                    'API em Node.js com Express: rotas `/auth`, `/produtos` e `/pedidos`',
+                    'Senhas com bcrypt e sessão com token JWT',
+                    'Banco SQL (libSQL) com cinco tabelas: cliente, comerciante, produto, pedido e item_pedido',
+                    'Configurado para publicar na Vercel',
                 ] },
             ],
         },
