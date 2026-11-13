@@ -5,6 +5,8 @@
 (() => {
     'use strict';
 
+    document.documentElement.classList.add('js');
+
     const $ = (seletor) => document.querySelector(seletor);
     const aleatorio = (min, max) => min + Math.random() * (max - min);
     const sortear = (lista) => lista[Math.floor(Math.random() * lista.length)];
@@ -46,6 +48,8 @@
         } else {
             removerBug();
             clima.textContent = '';
+            colo = null;
+            gato.y = 0;
             definirEstado('sentado');
             terminarTerminal();
         }
@@ -53,12 +57,37 @@
 
     /* ---------- Barra de progresso da leitura ---------- */
     const xpBarra = $('#xp-barra');
+    let xpPendente = false;
     function atualizarXp() {
+        xpPendente = false;
         const total = document.documentElement.scrollHeight - innerHeight;
         xpBarra.style.width = (total > 0 ? Math.min(1, scrollY / total) * 100 : 0) + '%';
     }
-    addEventListener('scroll', atualizarXp, { passive: true });
-    addEventListener('resize', atualizarXp);
+    // No máximo uma atualização por quadro, mesmo com muitos eventos de rolagem
+    function pedirXp() {
+        if (xpPendente) return;
+        xpPendente = true;
+        requestAnimationFrame(atualizarXp);
+    }
+    addEventListener('scroll', pedirXp, { passive: true });
+    addEventListener('resize', pedirXp);
+
+    /* ---------- Menu marca a seção que está na tela ---------- */
+    const linksMenu = new Map();
+    document.querySelectorAll('.menu a').forEach((link) => linksMenu.set(link.getAttribute('href').slice(1), link));
+    const espiao = new IntersectionObserver((entradas) => {
+        entradas.forEach((entrada) => {
+            const link = linksMenu.get(entrada.target.id);
+            if (!link) return;
+            if (entrada.isIntersecting) {
+                linksMenu.forEach((outro) => outro.removeAttribute('aria-current'));
+                link.setAttribute('aria-current', 'true');
+            } else {
+                link.removeAttribute('aria-current');
+            }
+        });
+    }, { rootMargin: '-45% 0px -50% 0px' });
+    document.querySelectorAll('main section[id]').forEach((secao) => espiao.observe(secao));
 
     /* ---------- Terminal que digita sozinho ---------- */
     const terminal = $('#terminal');
@@ -119,6 +148,9 @@
         terminalPronto = true;
     }
 
+    // Um clique no terminal pula a digitação
+    terminal.addEventListener('click', terminarTerminal);
+
     /* ---------- Conquistas ---------- */
     const CONQUISTAS = [
         { id: 'projetos', nome: 'Explorador', desc: 'Visitou os projetos' },
@@ -126,6 +158,7 @@
         { id: 'contato', nome: 'Fim da fase', desc: 'Chegou até o contato' },
         { id: 'carinho', nome: 'Amigo do gato', desc: 'Clicou no gato preto' },
         { id: 'bug', nome: 'Caça-bugs', desc: 'Corrigiu um bug (clicando ou deixando com o gato)' },
+        { id: 'janela', nome: 'Gerente de janelas', desc: 'Arrastou uma caixa do site (ou o gato)' },
         { id: 'konami', nome: 'Código secreto', desc: 'Dica: ↑ ↑ ↓ ↓ ← → ← → B A' },
     ];
     let feitas = memoria.ler('gt-conquistas', []);
@@ -218,6 +251,115 @@
         desenharConquistas();
     });
 
+    /* ---------- Caixas arrastáveis ---------- */
+    const movidas = new Set();
+    const btnArrumar = document.createElement('button');
+    btnArrumar.type = 'button';
+    btnArrumar.className = 'arrumar';
+    btnArrumar.textContent = 'Arrumar caixas';
+    btnArrumar.hidden = true;
+    document.body.append(btnArrumar);
+
+    // Deixa "caixa" ser arrastada segurando em "alca". A caixa só muda de lugar
+    // visualmente (transform), então o resto da página não se mexe.
+    function tornarArrastavel(caixa, alca) {
+        const pos = { x: 0, y: 0 };
+        let inicio = null;
+        caixa.classList.add('movivel');
+        alca.classList.add('alca');
+        alca.title = 'Arraste para mover';
+
+        alca.addEventListener('pointerdown', (evento) => {
+            if (evento.button !== 0 || evento.target.closest('button, a')) return;
+            const r = caixa.getBoundingClientRect();
+            const largura = document.documentElement.clientWidth;
+            const topo = r.top + scrollY;
+            inicio = {
+                px: evento.clientX, py: evento.clientY, x: pos.x, y: pos.y,
+                // até onde pode ir sem sumir da página
+                minX: 80 - r.right, maxX: largura - 80 - r.left,
+                minY: 70 - topo, maxY: document.documentElement.scrollHeight - 80 - topo,
+            };
+            alca.setPointerCapture(evento.pointerId);
+            caixa.classList.add('arrastando');
+            evento.preventDefault();
+        });
+
+        alca.addEventListener('pointermove', (evento) => {
+            if (!inicio) return;
+            const dx = Math.max(inicio.minX, Math.min(inicio.maxX, evento.clientX - inicio.px));
+            const dy = Math.max(inicio.minY, Math.min(inicio.maxY, evento.clientY - inicio.py));
+            pos.x = inicio.x + dx;
+            pos.y = inicio.y + dy;
+            caixa.style.transform = `translate(${pos.x}px, ${pos.y}px)`;
+        });
+
+        const soltar = () => {
+            if (!inicio) return;
+            inicio = null;
+            caixa.classList.remove('arrastando');
+            if (pos.x || pos.y) {
+                movidas.add(voltar);
+                caixa.classList.add('movida');
+                btnArrumar.hidden = false;
+                desbloquear('janela');
+            }
+        };
+        alca.addEventListener('pointerup', soltar);
+        alca.addEventListener('pointercancel', soltar);
+
+        function voltar() {
+            pos.x = 0;
+            pos.y = 0;
+            caixa.style.transform = '';
+            caixa.classList.remove('movida');
+            movidas.delete(voltar);
+            btnArrumar.hidden = movidas.size === 0;
+        }
+        return voltar;
+    }
+
+    function arrumarTudo() {
+        [...movidas].forEach((voltar) => voltar());
+    }
+    btnArrumar.addEventListener('click', () => {
+        arrumarTudo();
+        falar('tudo no lugar de novo');
+    });
+    // Se a janela mudar de tamanho, as posições antigas deixam de fazer sentido
+    let larguraAnterior = innerWidth;
+    addEventListener('resize', () => {
+        if (innerWidth !== larguraAnterior) {
+            larguraAnterior = innerWidth;
+            arrumarTudo();
+        }
+    });
+
+    const janelaTerminal = $('#janela-terminal');
+    const voltarTerminal = tornarArrastavel(janelaTerminal, janelaTerminal.querySelector('.terminal-topo'));
+    tornarArrastavel(painel, painel.querySelector('h2'));
+
+    // Botões da janela do terminal
+    const tbMin = $('#tb-min');
+    const reabrir = $('#terminal-reabrir');
+    $('#tb-volta').addEventListener('click', voltarTerminal);
+    tbMin.addEventListener('click', () => {
+        const minimizado = janelaTerminal.classList.toggle('minimizado');
+        tbMin.setAttribute('aria-expanded', String(!minimizado));
+        tbMin.setAttribute('aria-label', minimizado ? 'Abrir o terminal' : 'Minimizar o terminal');
+    });
+    $('#tb-fechar').addEventListener('click', () => {
+        voltarTerminal();
+        janelaTerminal.hidden = true;
+        reabrir.hidden = false;
+        reabrir.focus();
+    });
+    reabrir.addEventListener('click', () => {
+        janelaTerminal.hidden = false;
+        reabrir.hidden = true;
+        $('#tb-fechar').focus();
+    });
+
     /* ---------- Desenhos em pixel ---------- */
     // Cada letra é um quadradinho: k preto, G olho verde, d pupila, w brilho, p rosa, g cinza, r vermelho, c carcaça, v tela
     const CORES = {
@@ -239,63 +381,12 @@
         return `<svg viewBox="0 0 ${largura} ${linhas.length}" width="${largura * px}" height="${linhas.length * px}" shape-rendering="crispEdges" aria-hidden="true">${quadrados}</svg>`;
     }
 
-    const CORPO_ANDANDO = [
-        'k...........kk...kk.',
-        'k...........kkk.kkk.',
-        'k..........kkkkkkkkk',
-        '.k.........kGGGkGGGk',
-        '.k.........kGwdkGwdk',
-        '.k.........kGGGkGGGk',
-        '..kkkkkkkkkkkkkkpkkk',
-        '..kkkkkkkkkkkkkkkkk.',
-        '..kkkkkkkkkkkkk.....',
-        '..kkkkkkkkkkkkk.....',
-    ];
-    const GATO = {
-        anda1: [...CORPO_ANDANDO,
-            '..kk.kk....kk.kk....',
-            '..kk.kk....kk.kk....',
-            '..k...k....k...k....'],
-        anda2: [...CORPO_ANDANDO,
-            '...kkkk....kkkk.....',
-            '...kk.kk..kk.kk.....',
-            '..kk...k..k...kk....'],
-        sentado: [
-            '..kk........kk..',
-            '.kpkk......kkpk.',
-            '.kkkkkkkkkkkkkk.',
-            'kkkkkkkkkkkkkkkk',
-            'kkGGGGkkkkGGGGkk',
-            'kkGwdGkkkkGwdGkk',
-            'kkGddGkkkkGddGkk',
-            'kkGGGGkkkkGGGGkk',
-            'kkkkkkkppkkkkkkk',
-            '.kkkkkkkkkkkkkk.',
-            '...kkkkkkkkkk...',
-            '...kkkkkkkkkk...',
-            '..kkkkkkkkkkkk.k',
-            '..kkkkkkkkkkkk.k',
-            '..kkkkkkkkkkkkkk',
-            '..kkk.kkkk.kkkk.'],
-        dormindo: [
-            '..kk........kk....',
-            '.kpkk......kkpk...',
-            '.kkkkkkkkkkkkkk...',
-            'kkkkkkkkkkkkkkkkk.',
-            'kkggggkkkkggggkkkk',
-            'kkkkkkkppkkkkkkkkk',
-            'kkkkkkkkkkkkkkkkkk',
-            '.kkkkkkkkkkkkkkkk.'],
-    };
-    // Coluna onde o chapéu encaixa na cabeça, em cada pose
-    const CABECA = { anda1: 11, anda2: 11, sentado: 4, dormindo: 4 };
-
     /* ---------- Datas comemorativas ----------
      * Em cada data o gato ganha um chapéu, uma frase e algo caindo ou voando na tela.
      * Para testar uma data sem esperar por ela, abra o site com ?data=AAAA-MM-DD no fim
      * do endereço. Exemplo: index.html?data=2026-12-25
      */
-    // Chapéus têm 8 colunas. As duas últimas linhas ficam na altura das orelhas.
+    // Chapéus têm 8 colunas e ficam presos em cima da cabeça do gato.
     const CHAPEUS = {
         natal: [
             '.....w..',
@@ -392,7 +483,6 @@
         {
             nome: 'Sexta-feira 13', quando: ({ dia, semana }) => dia === 13 && semana === 5,
             frase: 'sexta-feira 13: azar é dos bugs',
-            cores: { G: '#ffb02e' },   // olhos cor de âmbar
             bugsRapidos: true,           // os bugs aparecem com mais frequência
             particula: { tipo: 'voa', intervalo: 4200, html: () => sprite(PECAS.morcego, 3) },
         },
@@ -433,21 +523,6 @@
     }
 
     const evento = eventoDeHoje();
-    if (evento && evento.cores) Object.assign(CORES, evento.cores);
-
-    // Coloca o chapéu em cima do desenho do gato
-    function vestir(linhas, chapeu, coluna) {
-        if (!chapeu) return linhas;
-        const largura = Math.max(...linhas.map((l) => l.length));
-        const acima = chapeu.length - 2;
-        const grade = [...Array(acima).fill(''), ...linhas].map((l) => [...l.padEnd(largura, '.')]);
-        chapeu.forEach((linha, y) => {
-            [...linha].forEach((letra, i) => {
-                if (letra !== '.' && coluna + i < largura) grade[y][coluna + i] = letra;
-            });
-        });
-        return grade.map((l) => l.join(''));
-    }
 
     const chapeu = evento && evento.chapeu ? CHAPEUS[evento.chapeu] : null;
     const DESENHOS = {
@@ -465,9 +540,11 @@
             'r.r.r.r']),
         objeto: evento && evento.objeto ? sprite(PECAS[evento.objeto]) : '',
     };
-    Object.keys(GATO).forEach((pose) => {
-        DESENHOS[pose] = sprite(vestir(GATO[pose], chapeu, CABECA[pose]));
-    });
+    DESENHOS.chapeu = chapeu ? sprite(chapeu, 3) : '';
+
+    // O gato vem de uma folha de sprites (gato-sprites.png): 12 quadros de 104 x 84 lado a lado.
+    // 0 sentado, 1 piscando, 2 e 3 rabo mexendo, 4 a 9 andando, 10 e 11 dormindo.
+    const QUADRO_LARGURA = 104;
 
     /* ---------- Gato ---------- */
     const palco = $('#palco');
@@ -483,8 +560,64 @@
     const balao = gatoEl.querySelector('.balao');
     const efeitos = gatoEl.querySelectorAll('.efeito');
 
-    const LARGURA_GATO = 80;
-    const gato = { x: 24, dir: 1, estado: 'sentado', alvo: 24, ate: 0, quadro: 0, relogio: 0 };
+    const LARGURA_GATO = QUADRO_LARGURA;
+    const gato = { x: 24, y: 0, vy: 0, dir: 1, estado: 'sentado', alvo: 24, ate: 0 };
+
+    const spriteGato = document.createElement('span');
+    spriteGato.className = 'gato-sprite';
+    gatoCorpo.append(spriteGato);
+
+    // Peças extras ao redor do gato: criadas uma vez só, depois é mostrar e esconder
+    const pecas = {};
+    const criarPeca = (nome, html) => {
+        if (!html) return;
+        const peca = document.createElement('span');
+        peca.className = 'peca peca-' + nome;
+        peca.innerHTML = html;
+        peca.hidden = nome !== 'chapeu';
+        gatoCorpo.append(peca);
+        pecas[nome] = peca;
+    };
+    criarPeca('notebook', DESENHOS.notebook);
+    criarPeca('objeto', DESENHOS.objeto);
+    criarPeca('chapeu', DESENHOS.chapeu);
+
+    // Troca o quadro da folha de sprites (só mexe no estilo quando o quadro muda)
+    let quadroAtual = -1;
+    function quadro(n) {
+        if (n === quadroAtual) return;
+        quadroAtual = n;
+        spriteGato.style.backgroundPositionX = -n * QUADRO_LARGURA + 'px';
+        if (pecas.chapeu) {
+            // a cabeça muda de lugar em cada pose; o chapéu acompanha
+            const [dx, dy] = n >= 10 ? [3, 47] : n >= 4 ? [5, 9 + ((n - 4) % 3 === 1 ? 1 : 0)] : [0, 0];
+            pecas.chapeu.style.transform = `translate(${dx}px, ${dy}px)`;
+        }
+    }
+
+    const anim = { t: 0, piscar: 2, rabo: 4 };
+    function animarGato(dt) {
+        anim.t += dt;
+        const { estado } = gato;
+        if (estado === 'andando' || estado === 'cacando') {
+            quadro(4 + Math.floor(anim.t * (estado === 'cacando' ? 16 : 9)) % 6);
+        } else if (estado === 'dormindo') {
+            quadro(10 + Math.floor(anim.t / 0.9) % 2); // respiração
+        } else {
+            let n = 0;
+            if (anim.t > anim.rabo) {
+                const passo = Math.floor((anim.t - anim.rabo) / 0.2);
+                if (passo >= 4) anim.rabo = anim.t + aleatorio(3, 7);
+                else n = [2, 0, 3, 0][passo];
+            }
+            if (anim.t > anim.piscar) {
+                if (anim.t - anim.piscar > 0.15) anim.piscar = anim.t + aleatorio(2.5, 5.5);
+                else n = 1;
+            }
+            quadro(n);
+        }
+    }
+
     let bug = null;
     let proximoBug = 0;
     let tempoBalao = 0;
@@ -493,15 +626,10 @@
 
     function desenharGato() {
         const { estado } = gato;
-        if (estado === 'andando' || estado === 'cacando') {
-            gatoCorpo.innerHTML = gato.quadro ? DESENHOS.anda2 : DESENHOS.anda1;
-        } else if (estado === 'dormindo') {
-            gatoCorpo.innerHTML = DESENHOS.dormindo;
-        } else if (estado === 'programando') {
-            gatoCorpo.innerHTML = DESENHOS.sentado + DESENHOS.notebook;
-        } else {
-            gatoCorpo.innerHTML = DESENHOS.sentado + DESENHOS.objeto;
-        }
+        if (pecas.notebook) pecas.notebook.hidden = estado !== 'programando';
+        if (pecas.objeto) pecas.objeto.hidden = estado !== 'sentado';
+        // quadro inicial de cada estado; o laço principal cuida da animação
+        quadro(estado === 'dormindo' ? 10 : (estado === 'andando' || estado === 'cacando') ? 4 : 0);
     }
 
     function definirEstado(estado) {
@@ -515,6 +643,7 @@
 
     function posicionarGato() {
         gatoEl.style.setProperty('--x', gato.x.toFixed(1) + 'px');
+        gatoEl.style.setProperty('--y', (-gato.y).toFixed(1) + 'px');
         gatoEl.style.setProperty('--dir', gato.dir);
     }
 
@@ -565,7 +694,9 @@
     ];
     if (evento) FRASES.push(evento.frase, evento.frase);
 
+    let ignorarClique = false;
     gatoEl.addEventListener('click', () => {
+        if (ignorarClique) return;
         falar(sortear(FRASES));
         desbloquear('carinho');
         if (gato.estado === 'dormindo') definirEstado('sentado');
@@ -574,6 +705,39 @@
         void gatoEl.offsetWidth; // reinicia a animação do pulo
         gatoEl.classList.add('pulo');
     });
+
+    // Dá para pegar o gato no colo e soltar em outro lugar: ele cai de pé
+    let colo = null;
+    gatoEl.addEventListener('pointerdown', (evento) => {
+        if (evento.button !== 0 || !animado) return;
+        colo = { px: evento.clientX, py: evento.clientY, ativo: false };
+        gatoEl.setPointerCapture(evento.pointerId);
+    });
+    gatoEl.addEventListener('pointermove', (evento) => {
+        if (!colo) return;
+        if (!colo.ativo) {
+            if (Math.hypot(evento.clientX - colo.px, evento.clientY - colo.py) < 6) return;
+            colo.ativo = true;
+            definirEstado('carregado');
+            falar('ei! me põe no chão', 1500);
+        }
+        gato.x = Math.max(0, Math.min(limite(), evento.clientX - LARGURA_GATO / 2));
+        gato.y = Math.max(0, innerHeight - evento.clientY - 42);
+        posicionarGato();
+    });
+    function soltarGato() {
+        if (!colo) return;
+        if (colo.ativo) {
+            ignorarClique = true;
+            setTimeout(() => { ignorarClique = false; }, 80);
+            gato.vy = 0;
+            definirEstado('caindo');
+            desbloquear('janela');
+        }
+        colo = null;
+    }
+    gatoEl.addEventListener('pointerup', soltarGato);
+    gatoEl.addEventListener('pointercancel', soltarGato);
 
     /* ---------- Bugs ---------- */
     function criarBug(agora) {
@@ -602,6 +766,9 @@
         bugsCorrigidos += 1;
         memoria.gravar('gt-bugs', bugsCorrigidos);
         contaBugs.textContent = bugsCorrigidos;
+        contaBugs.classList.remove('pulsa');
+        void contaBugs.offsetWidth;
+        contaBugs.classList.add('pulsa');
         desbloquear('bug');
         falar(quem === 'gato' ? 'bug corrigido! +1' : 'ei, esse era meu!');
         definirEstado('sentado');
@@ -639,7 +806,7 @@
         selo.title = 'Data comemorativa de hoje';
         $('.hud').prepend(selo);
 
-        if (chapeu) gatoEl.style.setProperty('--extra', (chapeu.length - 2) * 4 + 'px');
+        if (chapeu) gatoEl.style.setProperty('--extra', (chapeu.length - 2) * 3 + 'px');
 
         if (evento.bandeirinhas) {
             const fio = document.createElement('div');
@@ -663,6 +830,7 @@
     let ultimo = performance.now();
 
     function atualizar(dt, agora) {
+        animarGato(dt);
         if (evento && evento.particula && agora > proximaParticula) soltarParticula(agora);
 
         if (bug) {
@@ -671,6 +839,19 @@
             if (bug.x < -60 || bug.x > document.documentElement.clientWidth + 60) removerBug();
         } else if (agora > proximoBug) {
             criarBug(agora);
+        }
+
+        if (gato.estado === 'carregado') return;
+        if (gato.estado === 'caindo') {
+            gato.vy += 2200 * dt;
+            gato.y = Math.max(0, gato.y - gato.vy * dt);
+            if (gato.y === 0) {
+                definirEstado('sentado');
+                gato.ate = agora + 1800;
+                falar(sortear(['pouso perfeito', 'gato sempre cai de pé', 'de novo!']), 1600);
+            }
+            posicionarGato();
+            return;
         }
 
         if (bug && gato.estado !== 'cacando') {
@@ -693,15 +874,6 @@
             definirEstado('andando');
         }
 
-        if (gato.estado === 'andando' || gato.estado === 'cacando') {
-            gato.relogio += dt;
-            if (gato.relogio > (gato.estado === 'cacando' ? 0.09 : 0.17)) {
-                gato.relogio = 0;
-                gato.quadro ^= 1;
-                desenharGato();
-            }
-        }
-
         gato.x = Math.min(gato.x, limite());
         posicionarGato();
     }
@@ -721,7 +893,7 @@
         for (let i = 0; i < 9; i++) {
             const corredor = document.createElement('div');
             corredor.className = 'corredor';
-            corredor.innerHTML = i % 2 ? DESENHOS.anda1 : DESENHOS.anda2;
+            corredor.innerHTML = '<span class="gato-sprite"></span>';
             corredor.style.bottom = Math.round(aleatorio(0, innerHeight * 0.75)) + 'px';
             corredor.style.animationDuration = aleatorio(1.8, 3.6).toFixed(2) + 's';
             corredor.style.animationDelay = (i * 0.18).toFixed(2) + 's';
