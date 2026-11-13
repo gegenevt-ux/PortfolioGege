@@ -47,6 +47,7 @@
             gato.ate = performance.now() + 800;
         } else {
             removerBug();
+            limparChuva();
             clima.textContent = '';
             colo = null;
             gato.y = 0;
@@ -158,6 +159,7 @@
         { id: 'contato', nome: 'Fim da fase', desc: 'Chegou até o contato' },
         { id: 'carinho', nome: 'Amigo do gato', desc: 'Clicou no gato preto' },
         { id: 'bug', nome: 'Caça-bugs', desc: 'Corrigiu um bug (clicando ou deixando com o gato)' },
+        { id: 'detalhes', nome: 'Curioso', desc: 'Abriu os detalhes de um projeto' },
         { id: 'janela', nome: 'Gerente de janelas', desc: 'Arrastou uma caixa do site (ou o gato)' },
         { id: 'konami', nome: 'Código secreto', desc: 'Dica: ↑ ↑ ↓ ↓ ← → ← → B A' },
     ];
@@ -262,7 +264,7 @@
 
     // Deixa "caixa" ser arrastada segurando em "alca". A caixa só muda de lugar
     // visualmente (transform), então o resto da página não se mexe.
-    function tornarArrastavel(caixa, alca) {
+    function tornarArrastavel(caixa, alca, fixa = false) {
         const pos = { x: 0, y: 0 };
         let inicio = null;
         caixa.classList.add('movivel');
@@ -276,9 +278,10 @@
             const topo = r.top + scrollY;
             inicio = {
                 px: evento.clientX, py: evento.clientY, x: pos.x, y: pos.y,
-                // até onde pode ir sem sumir da página
+                // até onde pode ir sem sumir da página (ou da tela, se a caixa for fixa)
                 minX: 80 - r.right, maxX: largura - 80 - r.left,
-                minY: 70 - topo, maxY: document.documentElement.scrollHeight - 80 - topo,
+                minY: fixa ? 8 - r.top : 70 - topo,
+                maxY: fixa ? innerHeight - 60 - r.top : document.documentElement.scrollHeight - 80 - topo,
             };
             alca.setPointerCapture(evento.pointerId);
             caixa.classList.add('arrastando');
@@ -359,6 +362,269 @@
         reabrir.hidden = true;
         $('#tb-fechar').focus();
     });
+
+    /* ---------- Janela de detalhes dos projetos ----------
+     * Para mudar o que aparece em cada aba, edite os textos abaixo.
+     * Cada projeto tem as abas na ordem em que aparecem; uma aba pode ter
+     * "texto" (parágrafos) e "lista" (itens). Trechos entre crases viram código.
+     */
+    const PROJETOS = {
+        eco: {
+            titulo: 'EcoAction',
+            abas: [
+                { nome: 'Resumo', texto: [
+                    'Protótipo de um app que conecta voluntários a ações socioambientais, feito no projeto de Extensão I.',
+                    'Funciona inteiro no navegador, em uma única página, simulando a experiência de um aplicativo.',
+                ], nota: 'Protótipo acadêmico' },
+                { nome: 'Funcionalidades', lista: [
+                    'Feed de ações com busca e filtro por categoria',
+                    'Inscrição em ações e histórico de participação',
+                    'Chat de cada ação',
+                    'Painel do organizador: publicar, editar, encerrar e reativar ações',
+                    'Avisos para os inscritos e notificações',
+                    'Perfil do voluntário, com edição',
+                ] },
+                { nome: 'Por dentro', lista: [
+                    'Cinco telas: Início, Nova Ação, Chat, Painel e Perfil',
+                    'Tudo em um `index.html`, com HTML, CSS e JavaScript juntos',
+                    'Navegação entre telas feita em JavaScript, sem recarregar a página',
+                ] },
+            ],
+        },
+        academia: {
+            titulo: 'Gestão de Academia',
+            abas: [
+                { nome: 'Resumo', texto: [
+                    'Site de uma academia com página inicial e área de cadastro de alunos e instrutores.',
+                    'O visitante conhece as modalidades e a equipe administra os cadastros.',
+                ], nota: 'Site com Bootstrap' },
+                { nome: 'Funcionalidades', lista: [
+                    'Página inicial com carrossel e modalidades (musculação, calistenia e outras)',
+                    'Cadastro de alunos: nome, CPF, e-mail, telefone, plano e turno',
+                    'Cadastro de instrutores, com especialidade',
+                    'Listagem de alunos e de instrutores',
+                    'Tema claro e escuro',
+                ] },
+                { nome: 'Por dentro', lista: [
+                    'Cinco páginas em HTML',
+                    'Layout e componentes do Bootstrap',
+                    'Troca de tema com o `color-modes.js`',
+                ] },
+            ],
+        },
+        karaoke: {
+            titulo: 'Catálogo de Karaokê',
+            abas: [
+                { nome: 'Resumo', texto: [
+                    'Aplicação para navegar por um catálogo de músicas de karaokê e encontrar a próxima para cantar.',
+                ], nota: 'Aplicação em Python' },
+                { nome: 'Funcionalidades', lista: [
+                    'Catálogo completo de músicas em uma página larga',
+                    'Navegação pelo catálogo para escolher a próxima música',
+                ] },
+                { nome: 'Por dentro', lista: [
+                    'Interface feita com Streamlit',
+                    'Dados tratados com pandas e numpy',
+                    '`main.py` configura a página e chama a tela do catálogo',
+                ] },
+            ],
+        },
+        banco: {
+            titulo: 'SapiensBank',
+            abas: [
+                { nome: 'Resumo', texto: [
+                    'Banco que roda no terminal, feito para praticar orientação a objetos em C#.',
+                    'As contas ficam salvas em arquivo, então continuam lá quando o programa é aberto de novo.',
+                ], nota: 'Projeto acadêmico' },
+                { nome: 'Funcionalidades', lista: [
+                    'Criar conta com cliente, CPF, senha e limite',
+                    'Listar contas',
+                    'Sacar e depositar',
+                    'Aumentar e diminuir o limite',
+                    'Saldo disponível calculado como saldo mais limite',
+                    'Validação de senha',
+                ] },
+                { nome: 'Por dentro', lista: [
+                    '`Conta.cs`: dados e regras de cada conta',
+                    '`Banco.cs`: guarda as contas e salva em JSON',
+                    '`UX.cs`: menus e telas do terminal',
+                    'C# com .NET',
+                ] },
+            ],
+        },
+        vendas: {
+            titulo: 'Sistema de Vendas',
+            abas: [
+                { nome: 'Resumo', texto: [
+                    'Mockup da navegação de um sistema de vendas, com áreas de clientes, produtos e pedidos.',
+                ], nota: 'Em andamento' },
+                { nome: 'Funcionalidades', lista: [
+                    'Cadastro e listagem de clientes',
+                    'Cadastro e listagem de produtos',
+                    'Cadastro e listagem de pedidos',
+                    'Tema claro e escuro',
+                ] },
+                { nome: 'Por dentro', lista: [
+                    'Sete páginas em HTML',
+                    'Layout e componentes do Bootstrap',
+                    'Menu de navegação entre as áreas',
+                ] },
+            ],
+        },
+    };
+
+    const janela = $('#janela-projeto');
+    const janelaAbas = $('#janela-abas');
+    const janelaCorpo = $('#janela-corpo');
+    const voltarJanela = tornarArrastavel(janela, janela.querySelector('.janela-topo'), true);
+    let cartaoAberto = null;
+
+    // Escreve um texto no elemento, transformando `trechos entre crases` em <code>
+    function escrever(elemento, texto) {
+        texto.split('`').forEach((parte, i) => {
+            if (!parte) return;
+            if (i % 2) {
+                const codigo = document.createElement('code');
+                codigo.textContent = parte;
+                elemento.append(codigo);
+            } else {
+                elemento.append(parte);
+            }
+        });
+    }
+
+    function mostrarAba(projeto, indice) {
+        const aba = projeto.abas[indice];
+        [...janelaAbas.children].forEach((botao, i) => {
+            botao.setAttribute('aria-selected', String(i === indice));
+            botao.tabIndex = i === indice ? 0 : -1;
+        });
+        janelaCorpo.textContent = '';
+        janelaCorpo.scrollTop = 0;
+        if (aba.nota) {
+            const nota = document.createElement('p');
+            nota.className = 'nota';
+            nota.textContent = aba.nota;
+            janelaCorpo.append(nota);
+        }
+        (aba.texto || []).forEach((linha) => {
+            const p = document.createElement('p');
+            escrever(p, linha);
+            janelaCorpo.append(p);
+        });
+        if (aba.lista) {
+            const ul = document.createElement('ul');
+            aba.lista.forEach((item) => {
+                const li = document.createElement('li');
+                const span = document.createElement('span');
+                escrever(span, item);
+                li.append(span);
+                ul.append(li);
+            });
+            janelaCorpo.append(ul);
+        }
+    }
+
+    function abrirJanela(id, cartao) {
+        const projeto = PROJETOS[id];
+        if (!projeto) return false;
+        cartaoAberto = cartao;
+        voltarJanela();
+        $('#janela-titulo').textContent = projeto.titulo;
+        $('#janela-link').href = cartao.href;
+        janelaAbas.textContent = '';
+        projeto.abas.forEach((aba, i) => {
+            const botao = document.createElement('button');
+            botao.type = 'button';
+            botao.className = 'aba';
+            botao.setAttribute('role', 'tab');
+            botao.textContent = aba.nome;
+            botao.addEventListener('click', () => mostrarAba(projeto, i));
+            janelaAbas.append(botao);
+        });
+        // Setas esquerda e direita trocam de aba
+        janelaAbas.onkeydown = (evento) => {
+            const passo = evento.key === 'ArrowRight' ? 1 : evento.key === 'ArrowLeft' ? -1 : 0;
+            if (!passo) return;
+            const botoes = [...janelaAbas.children];
+            const atual = botoes.findIndex((b) => b.getAttribute('aria-selected') === 'true');
+            const novo = (atual + passo + botoes.length) % botoes.length;
+            mostrarAba(projeto, novo);
+            botoes[novo].focus();
+            evento.stopPropagation();
+        };
+        mostrarAba(projeto, 0);
+        janela.hidden = false;
+        janelaAbas.firstElementChild.focus();
+        desbloquear('detalhes');
+        return true;
+    }
+
+    function fecharJanela() {
+        if (janela.hidden) return;
+        janela.hidden = true;
+        if (cartaoAberto) cartaoAberto.focus();
+        cartaoAberto = null;
+    }
+
+    document.querySelectorAll('.projeto[data-projeto]').forEach((cartao) => {
+        cartao.addEventListener('click', (evento) => {
+            // Ctrl, Shift ou Cmd + clique continuam abrindo o repositório em outra aba
+            if (evento.ctrlKey || evento.metaKey || evento.shiftKey) return;
+            if (abrirJanela(cartao.dataset.projeto, cartao)) evento.preventDefault();
+        });
+    });
+    $('#janela-fechar').addEventListener('click', fecharJanela);
+    document.addEventListener('keydown', (evento) => {
+        if (evento.key === 'Escape') fecharJanela();
+    });
+    document.addEventListener('pointerdown', (evento) => {
+        if (!janela.hidden && !janela.contains(evento.target) && !evento.target.closest('.projeto, .gato, .bug, .arrumar')) {
+            fecharJanela();
+        }
+    });
+
+    /* ---------- Chuva de código no fundo ---------- */
+    const chuva = document.createElement('canvas');
+    chuva.className = 'chuva';
+    chuva.setAttribute('aria-hidden', 'true');
+    document.body.prepend(chuva);
+    const pincel = chuva.getContext('2d');
+    const GLIFOS = 'アイウエオカキクケコサシスセソタチツテトナニヌネノ0123456789{}[]<>/=;$#&*+';
+    const LETRA = 18;
+    let colunas = [];
+    let ultimaChuva = 0;
+
+    function ajustarChuva() {
+        const nitidez = Math.min(devicePixelRatio || 1, 1.5);
+        chuva.width = Math.round(innerWidth * nitidez);
+        chuva.height = Math.round(innerHeight * nitidez);
+        pincel.setTransform(nitidez, 0, 0, nitidez, 0, 0);
+        pincel.font = `${LETRA - 2}px "JetBrains Mono", ui-monospace, monospace`;
+        colunas = Array.from({ length: Math.ceil(innerWidth / LETRA) }, () => Math.floor(aleatorio(-50, 0)));
+    }
+
+    // Cada coluna desce uma letra por vez; um véu escuro apaga o rastro aos poucos
+    function desenharChuva(agora) {
+        if (agora - ultimaChuva < 75) return; // cerca de 13 quadros por segundo já basta
+        ultimaChuva = agora;
+        pincel.fillStyle = 'rgba(11, 13, 23, 0.14)';
+        pincel.fillRect(0, 0, innerWidth, innerHeight);
+        for (let i = 0; i < colunas.length; i++) {
+            const y = colunas[i] * LETRA;
+            if (y > 0) {
+                pincel.fillStyle = Math.random() < 0.08 ? '#e6ffe2' : '#7cff6b';
+                pincel.fillText(GLIFOS[Math.floor(Math.random() * GLIFOS.length)], i * LETRA, y);
+            }
+            colunas[i] = y > innerHeight && Math.random() > 0.97 ? 0 : colunas[i] + 1;
+        }
+    }
+
+    function limparChuva() {
+        pincel.clearRect(0, 0, innerWidth, innerHeight);
+    }
+    ajustarChuva();
+    addEventListener('resize', ajustarChuva);
 
     /* ---------- Desenhos em pixel ---------- */
     // Cada letra é um quadradinho: k preto, G olho verde, d pupila, w brilho, p rosa, g cinza, r vermelho, c carcaça, v tela
@@ -881,7 +1147,10 @@
     function passo(agora) {
         const dt = Math.min(0.05, (agora - ultimo) / 1000);
         ultimo = agora;
-        if (animado && !document.hidden) atualizar(dt, agora);
+        if (animado && !document.hidden) {
+            desenharChuva(agora);
+            atualizar(dt, agora);
+        }
         requestAnimationFrame(passo);
     }
 
