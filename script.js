@@ -45,6 +45,7 @@
             gato.ate = performance.now() + 800;
         } else {
             removerBug();
+            clima.textContent = '';
             definirEstado('sentado');
             terminarTerminal();
         }
@@ -219,7 +220,11 @@
 
     /* ---------- Desenhos em pixel ---------- */
     // Cada letra é um quadradinho: k preto, G olho verde, d pupila, w brilho, p rosa, g cinza, r vermelho, c carcaça, v tela
-    const CORES = { k: '#0c0d14', G: '#4ccb52', d: '#04120a', w: '#ffffff', p: '#ff8fb1', g: '#4a5380', r: '#ff5d73', c: '#aab4dd', v: '#7cff6b', e: '#1b2140' };
+    const CORES = {
+        k: '#0c0d14', G: '#4ccb52', d: '#04120a', w: '#ffffff', p: '#ff8fb1', g: '#4a5380',
+        r: '#ff5d73', c: '#aab4dd', v: '#7cff6b', e: '#1b2140',
+        u: '#8f7bff', o: '#ff9a3c', a: '#ffd84a', b: '#4ad8ff', m: '#ff5db1', s: '#e0b354',
+    };
 
     function sprite(linhas, px = 4) {
         const largura = Math.max(...linhas.map((l) => l.length));
@@ -246,16 +251,16 @@
         '..kkkkkkkkkkkkk.....',
         '..kkkkkkkkkkkkk.....',
     ];
-    const DESENHOS = {
-        anda1: sprite([...CORPO_ANDANDO,
+    const GATO = {
+        anda1: [...CORPO_ANDANDO,
             '..kk.kk....kk.kk....',
             '..kk.kk....kk.kk....',
-            '..k...k....k...k....']),
-        anda2: sprite([...CORPO_ANDANDO,
+            '..k...k....k...k....'],
+        anda2: [...CORPO_ANDANDO,
             '...kkkk....kkkk.....',
             '...kk.kk..kk.kk.....',
-            '..kk...k..k...kk....']),
-        sentado: sprite([
+            '..kk...k..k...kk....'],
+        sentado: [
             '..kk........kk..',
             '.kpkk......kkpk.',
             '.kkkkkkkkkkkkkk.',
@@ -271,8 +276,8 @@
             '..kkkkkkkkkkkk.k',
             '..kkkkkkkkkkkk.k',
             '..kkkkkkkkkkkkkk',
-            '..kkk.kkkk.kkkk.']),
-        dormindo: sprite([
+            '..kkk.kkkk.kkkk.'],
+        dormindo: [
             '..kk........kk....',
             '.kpkk......kkpk...',
             '.kkkkkkkkkkkkkk...',
@@ -280,7 +285,172 @@
             'kkggggkkkkggggkkkk',
             'kkkkkkkppkkkkkkkkk',
             'kkkkkkkkkkkkkkkkkk',
-            '.kkkkkkkkkkkkkkkk.']),
+            '.kkkkkkkkkkkkkkkk.'],
+    };
+    // Coluna onde o chapéu encaixa na cabeça, em cada pose
+    const CABECA = { anda1: 11, anda2: 11, sentado: 4, dormindo: 4 };
+
+    /* ---------- Datas comemorativas ----------
+     * Em cada data o gato ganha um chapéu, uma frase e algo caindo ou voando na tela.
+     * Para testar uma data sem esperar por ela, abra o site com ?data=AAAA-MM-DD no fim
+     * do endereço. Exemplo: index.html?data=2026-12-25
+     */
+    // Chapéus têm 8 colunas. As duas últimas linhas ficam na altura das orelhas.
+    const CHAPEUS = {
+        natal: [
+            '.....w..',
+            '....rr..',
+            '...rrr..',
+            '..rrrrr.',
+            '.rrrrrr.',
+            'wwwwwwww'],
+        bruxa: [
+            '....u...',
+            '...uu...',
+            '...uuu..',
+            '..uuuu..',
+            '..oooo..',
+            'uuuuuuuu'],
+        festa: [
+            '...w....',
+            '...ab...',
+            '..abm...',
+            '..bmab..',
+            '.bmabma.',
+            '.mabmab.'],
+        penas: [
+            'm..a..b.',
+            'mm.a.bb.',
+            '.m.a.b..',
+            '.mmabb..',
+            '..aaaa..',
+            '.aaaaaa.'],
+        coelho: [
+            '.ww..ww.',
+            '.wp..pw.',
+            '.wp..pw.',
+            '.wp..pw.',
+            '.ww..ww.',
+            '.ww..ww.'],
+        palha: [
+            '..ssss..',
+            '..ssss..',
+            '..rrrr..',
+            'ssssssss'],
+    };
+
+    const PECAS = {
+        coracao: ['.rr.rr.', 'rrrrrrr', 'rrrrrrr', '.rrrrr.', '..rrr..', '...r...'],
+        morcego: ['u...u.u...u', 'uu.uuuuu.uu', 'uuuuuuuuuuu', '.uu.uuu.uu.', '....u.u....'],
+        abobora: ['...vv...', '.oooooo.', 'ookookoo', 'oooooooo', 'okkkkkko', '.oooooo.'],
+    };
+
+    const ponto = (cores, tamanho) => () =>
+        `<i class="ponto" style="--cor:${sortear(cores)};--tam:${tamanho}px"></i>`;
+    const COLORIDO = ['#ffd84a', '#4ad8ff', '#ff5db1', '#7cff6b', '#8f7bff'];
+
+    // Páscoa (domingo) de um ano, pelo cálculo de Meeus
+    function pascoa(ano) {
+        const a = ano % 19, b = Math.floor(ano / 100), c = ano % 100;
+        const d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25);
+        const g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30;
+        const i = Math.floor(c / 4), k = c % 4, l = (32 + 2 * e + 2 * i - h - k) % 7;
+        const m = Math.floor((a + 11 * h + 22 * l) / 451);
+        const mes = Math.floor((h + l - 7 * m + 114) / 31);
+        const dia = ((h + l - 7 * m + 114) % 31) + 1;
+        return new Date(ano, mes - 1, dia);
+    }
+
+    // A primeira data que combinar com o dia de hoje é a que vale.
+    // "md" é mês e dia juntos (25 de dezembro = 1225); "pascoa" é a distância em dias até a Páscoa.
+    const EVENTOS = [
+        {
+            nome: 'Ano Novo', quando: ({ md }) => md >= 1231 || md <= 102,
+            chapeu: 'festa', frase: 'feliz ano novo! versão nova de mim',
+            particula: { tipo: 'cai', intervalo: 280, html: ponto(COLORIDO, 6) },
+        },
+        {
+            nome: 'Carnaval', quando: ({ pascoa: p }) => p >= -51 && p <= -46,
+            chapeu: 'penas', frase: 'bloco do gato preto passando',
+            particula: { tipo: 'cai', intervalo: 220, html: ponto(COLORIDO, 6) },
+        },
+        {
+            nome: 'Páscoa', quando: ({ pascoa: p }) => p >= -2 && p <= 0,
+            chapeu: 'coelho', frase: 'cadê meu ovo de páscoa?',
+            particula: { tipo: 'cai', intervalo: 700, html: ponto(['#ffc8dd', '#bde0fe', '#fff3b0', '#caffbf'], 6) },
+        },
+        {
+            nome: 'Dia dos Namorados', quando: ({ md }) => md === 612,
+            frase: 'amor é dar merge sem conflito',
+            particula: { tipo: 'sobe', intervalo: 900, html: () => sprite(PECAS.coracao, 3) },
+        },
+        {
+            nome: 'Dia do Programador', quando: ({ diaDoAno }) => diaDoAno === 256,
+            frase: 'feliz dia do programador!',
+            particula: { tipo: 'cai', intervalo: 320, html: () => `<span class="bit">${sortear(['0', '1'])}</span>` },
+        },
+        {
+            nome: 'Sexta-feira 13', quando: ({ dia, semana }) => dia === 13 && semana === 5,
+            frase: 'sexta-feira 13: azar é dos bugs',
+            cores: { G: '#ffb02e' },   // olhos cor de âmbar
+            bugsRapidos: true,           // os bugs aparecem com mais frequência
+            particula: { tipo: 'voa', intervalo: 4200, html: () => sprite(PECAS.morcego, 3) },
+        },
+        {
+            nome: 'Festa Junina', quando: ({ md }) => md >= 613 && md <= 630,
+            chapeu: 'palha', frase: 'olha o bug! é mentira',
+            bandeirinhas: true,
+        },
+        {
+            nome: 'Halloween', quando: ({ md }) => md >= 1025 && md <= 1031,
+            chapeu: 'bruxa', frase: 'doces ou bugs?', objeto: 'abobora',
+            particula: { tipo: 'voa', intervalo: 2400, html: () => sprite(PECAS.morcego, 3) },
+        },
+        {
+            nome: 'Natal', quando: ({ md }) => md >= 1201 && md <= 1226,
+            chapeu: 'natal', frase: 'ho ho ho. sem deploy no Natal',
+            particula: { tipo: 'cai', intervalo: 380, html: ponto(['#ffffff', '#dfe6ff'], 4) },
+        },
+    ];
+
+    function eventoDeHoje() {
+        let hoje = new Date();
+        const teste = new URLSearchParams(location.search).get('data');
+        if (/^\d{4}-\d{2}-\d{2}$/.test(teste || '')) {
+            const [ano, mes, dia] = teste.split('-').map(Number);
+            hoje = new Date(ano, mes - 1, dia);
+        }
+        const meiaNoite = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+        const DIA = 86400000;
+        const info = {
+            md: (hoje.getMonth() + 1) * 100 + hoje.getDate(),
+            dia: hoje.getDate(),
+            semana: hoje.getDay(),
+            diaDoAno: Math.round((meiaNoite - new Date(hoje.getFullYear(), 0, 1)) / DIA) + 1,
+            pascoa: Math.round((meiaNoite - pascoa(hoje.getFullYear())) / DIA),
+        };
+        return EVENTOS.find((evento) => evento.quando(info)) || null;
+    }
+
+    const evento = eventoDeHoje();
+    if (evento && evento.cores) Object.assign(CORES, evento.cores);
+
+    // Coloca o chapéu em cima do desenho do gato
+    function vestir(linhas, chapeu, coluna) {
+        if (!chapeu) return linhas;
+        const largura = Math.max(...linhas.map((l) => l.length));
+        const acima = chapeu.length - 2;
+        const grade = [...Array(acima).fill(''), ...linhas].map((l) => [...l.padEnd(largura, '.')]);
+        chapeu.forEach((linha, y) => {
+            [...linha].forEach((letra, i) => {
+                if (letra !== '.' && coluna + i < largura) grade[y][coluna + i] = letra;
+            });
+        });
+        return grade.map((l) => l.join(''));
+    }
+
+    const chapeu = evento && evento.chapeu ? CHAPEUS[evento.chapeu] : null;
+    const DESENHOS = {
         notebook: sprite([
             '.cccccc',
             '.cevvec',
@@ -293,7 +463,11 @@
             'rrkrkrr',
             '.rrrrr.',
             'r.r.r.r']),
+        objeto: evento && evento.objeto ? sprite(PECAS[evento.objeto]) : '',
     };
+    Object.keys(GATO).forEach((pose) => {
+        DESENHOS[pose] = sprite(vestir(GATO[pose], chapeu, CABECA[pose]));
+    });
 
     /* ---------- Gato ---------- */
     const palco = $('#palco');
@@ -326,7 +500,7 @@
         } else if (estado === 'programando') {
             gatoCorpo.innerHTML = DESENHOS.sentado + DESENHOS.notebook;
         } else {
-            gatoCorpo.innerHTML = DESENHOS.sentado;
+            gatoCorpo.innerHTML = DESENHOS.sentado + DESENHOS.objeto;
         }
     }
 
@@ -347,6 +521,12 @@
     function falar(texto, duracao = 2400) {
         balao.textContent = texto;
         balao.hidden = false;
+        // Não deixa o balão sair pela lateral da tela
+        balao.style.setProperty('--desvio', '0px');
+        const caixa = balao.getBoundingClientRect();
+        const sobraDireita = caixa.right - (document.documentElement.clientWidth - 8);
+        const desvio = caixa.left < 8 ? 8 - caixa.left : (sobraDireita > 0 ? -sobraDireita : 0);
+        balao.style.setProperty('--desvio', desvio.toFixed(0) + 'px');
         clearTimeout(tempoBalao);
         tempoBalao = setTimeout(() => { balao.hidden = true; }, duracao);
     }
@@ -383,6 +563,7 @@
         'purr request aprovado',
         'ctrl + s salva vidas',
     ];
+    if (evento) FRASES.push(evento.frase, evento.frase);
 
     gatoEl.addEventListener('click', () => {
         falar(sortear(FRASES));
@@ -406,7 +587,7 @@
         el.addEventListener('click', () => corrigirBug('voce'));
         palco.append(el);
         bug = { el, x: daEsquerda ? -40 : document.documentElement.clientWidth + 10, dir: daEsquerda ? 1 : -1 };
-        proximoBug = agora + aleatorio(14000, 24000);
+        proximoBug = agora + (evento && evento.bugsRapidos ? aleatorio(7000, 12000) : aleatorio(14000, 24000));
     }
 
     function removerBug() {
@@ -427,10 +608,63 @@
         gato.ate = performance.now() + 2000;
     }
 
+    /* ---------- Clima das datas comemorativas ---------- */
+    const clima = document.createElement('div');
+    clima.className = 'clima';
+    clima.setAttribute('aria-hidden', 'true');
+    document.body.append(clima);
+    let proximaParticula = 0;
+
+    function soltarParticula(agora) {
+        const { tipo, intervalo, html } = evento.particula;
+        proximaParticula = agora + intervalo * aleatorio(0.6, 1.4);
+        if (clima.childElementCount > 45) return;
+        const el = document.createElement('span');
+        el.className = 'particula ' + tipo;
+        el.innerHTML = html();
+        el.style.setProperty('--px', aleatorio(0, 100).toFixed(1) + 'vw');
+        el.style.setProperty('--py', aleatorio(12, 70).toFixed(1) + 'vh');
+        el.style.setProperty('--deriva', aleatorio(-60, 60).toFixed(0) + 'px');
+        el.style.setProperty('--giro', aleatorio(-360, 360).toFixed(0) + 'deg');
+        el.style.animationDuration = (tipo === 'voa' ? aleatorio(5, 9) : aleatorio(8, 14)).toFixed(1) + 's';
+        el.addEventListener('animationend', () => el.remove());
+        clima.append(el);
+    }
+
+    function prepararEvento() {
+        if (!evento) return;
+        const selo = document.createElement('span');
+        selo.className = 'hud-item hud-evento';
+        selo.textContent = evento.nome;
+        selo.title = 'Data comemorativa de hoje';
+        $('.hud').prepend(selo);
+
+        if (chapeu) gatoEl.style.setProperty('--extra', (chapeu.length - 2) * 4 + 'px');
+
+        if (evento.bandeirinhas) {
+            const fio = document.createElement('div');
+            fio.className = 'bandeirinhas';
+            fio.setAttribute('aria-hidden', 'true');
+            for (let i = 0; i < 40; i++) {
+                const bandeira = document.createElement('i');
+                bandeira.style.setProperty('--cor', COLORIDO[i % COLORIDO.length]);
+                fio.append(bandeira);
+            }
+            $('.topo').append(fio);
+        }
+
+        setTimeout(() => {
+            avisar('Evento de hoje', evento.nome);
+            falar(evento.frase, 3600);
+        }, 1600);
+    }
+
     /* ---------- Laço principal ---------- */
     let ultimo = performance.now();
 
     function atualizar(dt, agora) {
+        if (evento && evento.particula && agora > proximaParticula) soltarParticula(agora);
+
         if (bug) {
             bug.x += bug.dir * 30 * dt;
             bug.el.style.setProperty('--x', bug.x.toFixed(1) + 'px');
@@ -514,7 +748,8 @@
     desenharConquistas();
     atualizarXp();
     definirEstado('sentado');
-    gato.ate = performance.now() + 2500;
+    prepararEvento();
+    gato.ate = performance.now() + (evento ? 5500 : 2500);
     proximoBug = performance.now() + aleatorio(7000, 11000);
 
     if (animado) {
