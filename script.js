@@ -218,8 +218,8 @@
     });
 
     /* ---------- Desenhos em pixel ---------- */
-    // Cada letra é um quadradinho: k preto, y olho, p rosa, g cinza, r vermelho, c carcaça, v tela
-    const CORES = { k: '#090a11', y: '#ffd84a', p: '#ff8fb1', g: '#4a5380', r: '#ff5d73', c: '#aab4dd', v: '#7cff6b', e: '#1b2140' };
+    // Cada letra é um quadradinho: k preto, G olho verde, d pupila, w brilho, p rosa, g cinza, r vermelho, c carcaça, v tela
+    const CORES = { k: '#0c0d14', G: '#4ccb52', d: '#04120a', w: '#ffffff', p: '#ff8fb1', g: '#4a5380', r: '#ff5d73', c: '#aab4dd', v: '#7cff6b', e: '#1b2140' };
 
     function sprite(linhas, px = 4) {
         const largura = Math.max(...linhas.map((l) => l.length));
@@ -235,46 +235,52 @@
     }
 
     const CORPO_ANDANDO = [
-        'k............k..k.',
-        'k............kkkk.',
-        'k...........kkkkkk',
-        '.k..........kykkyk',
-        '.k..........kkkkpk',
-        '..kkkkkkkkkkkkkkk.',
-        '..kkkkkkkkkkkkkk..',
-        '..kkkkkkkkkkkkk...',
-        '..kkkkkkkkkkkkk...',
+        'k...........kk...kk.',
+        'k...........kkk.kkk.',
+        'k..........kkkkkkkkk',
+        '.k.........kGGGkGGGk',
+        '.k.........kGwdkGwdk',
+        '.k.........kGGGkGGGk',
+        '..kkkkkkkkkkkkkkpkkk',
+        '..kkkkkkkkkkkkkkkkk.',
+        '..kkkkkkkkkkkkk.....',
+        '..kkkkkkkkkkkkk.....',
     ];
     const DESENHOS = {
         anda1: sprite([...CORPO_ANDANDO,
-            '..kk.kk....kk.kk..',
-            '..kk.kk....kk.kk..',
-            '..k...k....k...k..']),
+            '..kk.kk....kk.kk....',
+            '..kk.kk....kk.kk....',
+            '..k...k....k...k....']),
         anda2: sprite([...CORPO_ANDANDO,
-            '...kkkk....kkkk...',
-            '...kk.kk..kk.kk...',
-            '..kk...k..k...kk..']),
+            '...kkkk....kkkk.....',
+            '...kk.kk..kk.kk.....',
+            '..kk...k..k...kk....']),
         sentado: sprite([
-            '...k....k.....',
-            '...kk..kk.....',
-            '...kkkkkk.....',
-            '...kykkyk.....',
-            '...kkkpkk.....',
-            '....kkkk......',
-            '...kkkkkk.....',
-            '..kkkkkkkk....',
-            '..kkkkkkkk..k.',
-            '..kkkkkkkk..k.',
-            '..kkkkkkkkkkk.',
-            '..kk.kk.kkkk..']),
+            '..kk........kk..',
+            '.kpkk......kkpk.',
+            '.kkkkkkkkkkkkkk.',
+            'kkkkkkkkkkkkkkkk',
+            'kkGGGGkkkkGGGGkk',
+            'kkGwdGkkkkGwdGkk',
+            'kkGddGkkkkGddGkk',
+            'kkGGGGkkkkGGGGkk',
+            'kkkkkkkppkkkkkkk',
+            '.kkkkkkkkkkkkkk.',
+            '...kkkkkkkkkk...',
+            '...kkkkkkkkkk...',
+            '..kkkkkkkkkkkk.k',
+            '..kkkkkkkkkkkk.k',
+            '..kkkkkkkkkkkkkk',
+            '..kkk.kkkk.kkkk.']),
         dormindo: sprite([
-            '..k....k......',
-            '..kk..kk......',
-            '..kkkkkkkkkk..',
-            '..kggkggkkkkk.',
-            '.kkkkpkkkkkkkk',
-            '.kkkkkkkkkkkkk',
-            'kkkkkkkkkkkkk.']),
+            '..kk........kk....',
+            '.kpkk......kkpk...',
+            '.kkkkkkkkkkkkkk...',
+            'kkkkkkkkkkkkkkkkk.',
+            'kkggggkkkkggggkkkk',
+            'kkkkkkkppkkkkkkkkk',
+            'kkkkkkkkkkkkkkkkkk',
+            '.kkkkkkkkkkkkkkkk.']),
         notebook: sprite([
             '.cccccc',
             '.cevvec',
@@ -303,7 +309,7 @@
     const balao = gatoEl.querySelector('.balao');
     const efeitos = gatoEl.querySelectorAll('.efeito');
 
-    const LARGURA_GATO = 72;
+    const LARGURA_GATO = 80;
     const gato = { x: 24, dir: 1, estado: 'sentado', alvo: 24, ate: 0, quadro: 0, relogio: 0 };
     let bug = null;
     let proximoBug = 0;
