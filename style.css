@@ -719,9 +719,9 @@ button {
 
 .balao {
     position: absolute;
-    bottom: 76px;
+    bottom: calc(76px + var(--extra, 0px)); /* sobe quando o gato está de chapéu */
     left: 50%;
-    transform: translateX(-50%);
+    transform: translateX(calc(-50% + var(--desvio, 0px)));
     padding: 5px 10px;
     background: var(--tinta);
     color: var(--fundo);
@@ -800,6 +800,99 @@ button {
 @keyframes correr {
     from { transform: translateX(-90px); }
     to { transform: translateX(calc(100vw + 90px)); }
+}
+
+/* ---------- Datas comemorativas ---------- */
+.hud .hud-evento {
+    border-color: var(--alerta);
+    color: var(--alerta);
+}
+
+.clima {
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.particula {
+    position: absolute;
+    top: -30px;
+    left: var(--px);
+    animation: cair 10s linear forwards;
+}
+
+.particula.sobe {
+    top: auto;
+    bottom: -30px;
+    animation-name: flutuar;
+}
+
+.particula.voa {
+    top: var(--py);
+    left: -60px;
+    animation-name: voar;
+}
+
+.particula.voa svg {
+    animation: bater-asas 0.5s steps(2) infinite;
+}
+
+.ponto {
+    display: block;
+    width: var(--tam);
+    height: var(--tam);
+    background: var(--cor);
+    opacity: 0.85;
+}
+
+.bit {
+    font-family: var(--fonte-mono);
+    font-size: 0.875rem;
+    color: var(--destaque);
+    opacity: 0.55;
+}
+
+@keyframes cair {
+    to { transform: translate(var(--deriva), calc(100vh + 60px)) rotate(var(--giro)); }
+}
+
+@keyframes flutuar {
+    to { transform: translate(var(--deriva), calc(-100vh - 60px)); opacity: 0; }
+}
+
+@keyframes voar {
+    to { transform: translateX(calc(100vw + 120px)); }
+}
+
+@keyframes bater-asas {
+    50% { transform: translateY(-5px) scaleY(0.7); }
+}
+
+/* Fio de bandeirinhas da Festa Junina, pendurado no menu */
+.bandeirinhas {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-around;
+    height: 22px;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.bandeirinhas i {
+    flex: none;
+    width: 16px;
+    height: 20px;
+    background: var(--cor);
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 70%, 0 100%);
+}
+
+.painel {
+    z-index: 2;
 }
 
 /* ---------- Telas pequenas ---------- */
