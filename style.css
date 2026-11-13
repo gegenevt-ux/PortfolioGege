@@ -683,7 +683,7 @@ button {
 }
 
 .gato {
-    width: 72px;
+    width: 80px;
     transform-origin: bottom left;
     transform: translateX(var(--x, 24px)) scale(var(--escala));
 }
@@ -693,7 +693,7 @@ button {
     align-items: flex-end;
     justify-content: center;
     gap: 4px;
-    height: 52px;
+    height: 66px;
     transform: scaleX(var(--dir, 1));
 }
 
@@ -719,7 +719,7 @@ button {
 
 .balao {
     position: absolute;
-    bottom: 60px;
+    bottom: 76px;
     left: 50%;
     transform: translateX(-50%);
     padding: 5px 10px;
@@ -751,7 +751,7 @@ button {
 /* Símbolos que sobem quando o gato dorme ou programa */
 .efeito {
     position: absolute;
-    bottom: 46px;
+    bottom: 60px;
     left: 50%;
     font-family: var(--fonte-mono);
     font-size: 0.75rem;
