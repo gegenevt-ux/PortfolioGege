@@ -51,6 +51,9 @@
             clima.textContent = '';
             colo = null;
             gato.y = 0;
+            gato.giro = 0;
+            gato.apoio = null;
+            gato.subida = null;
             definirEstado('sentado');
             terminarTerminal();
         }
@@ -822,8 +825,9 @@
     };
     DESENHOS.chapeu = chapeu ? sprite(chapeu, 3) : '';
 
-    // O gato vem de uma folha de sprites (gato-sprites.png): 12 quadros de 104 x 84 lado a lado.
-    // 0 sentado, 1 piscando, 2 e 3 rabo mexendo, 4 a 9 andando, 10 e 11 dormindo.
+    // O gato vem de uma folha de sprites (gato-sprites.png): 14 quadros de 104 x 84 lado a lado.
+    // 0 sentado, 1 piscando, 2 e 3 rabo mexendo, 4 a 9 andando, 10 e 11 dormindo,
+    // 12 e 13 pendurado (quando alguém pega no colo).
     const QUADRO_LARGURA = 104;
 
     /* ---------- Gato ---------- */
@@ -841,7 +845,15 @@
     const efeitos = gatoEl.querySelectorAll('.efeito');
 
     const LARGURA_GATO = QUADRO_LARGURA;
-    const gato = { x: 24, y: 0, vy: 0, dir: 1, estado: 'sentado', alvo: 24, ate: 0 };
+    const gato = {
+        x: 24, y: 0, vy: 0, dir: 1, estado: 'sentado', alvo: 24, ate: 0,
+        giro: 0,          // inclinação do corpo, em graus (escalando ou balançando no colo)
+        balanco: 0, vBalanco: 0,
+        apoio: null,      // elemento em cima do qual ele está (terminal, cartão...)
+        apoioX: null,     // posição desse elemento no quadro anterior, para o gato ir junto
+        subida: null,     // plano de escalada: { el, lado }
+        ignora: null,     // apoio que ele acabou de largar e não deve pousar de novo
+    };
 
     const spriteGato = document.createElement('span');
     spriteGato.className = 'gato-sprite';
@@ -870,7 +882,7 @@
         spriteGato.style.backgroundPositionX = -n * QUADRO_LARGURA + 'px';
         if (pecas.chapeu) {
             // a cabeça muda de lugar em cada pose; o chapéu acompanha
-            const [dx, dy] = n >= 10 ? [3, 47] : n >= 4 ? [5, 9 + ((n - 4) % 3 === 1 ? 1 : 0)] : [0, 0];
+            const [dx, dy] = n >= 12 ? [-17, 1] : n >= 10 ? [3, 47] : n >= 4 ? [4, 7 + ((n - 4) % 3 === 1 ? 1 : 0)] : [0, 0];
             pecas.chapeu.style.transform = `translate(${dx}px, ${dy}px)`;
         }
     }
@@ -879,8 +891,12 @@
     function animarGato(dt) {
         anim.t += dt;
         const { estado } = gato;
-        if (estado === 'andando' || estado === 'cacando') {
+        if (estado === 'andando' || estado === 'cacando' || estado === 'escalando') {
             quadro(4 + Math.floor(anim.t * (estado === 'cacando' ? 16 : 9)) % 6);
+        } else if (estado === 'carregado') {
+            quadro(12 + Math.floor(anim.t / 0.16) % 2); // patas chutando o ar
+        } else if (estado === 'caindo') {
+            quadro(12);
         } else if (estado === 'dormindo') {
             quadro(10 + Math.floor(anim.t / 0.9) % 2); // respiração
         } else {
@@ -909,7 +925,9 @@
         if (pecas.notebook) pecas.notebook.hidden = estado !== 'programando';
         if (pecas.objeto) pecas.objeto.hidden = estado !== 'sentado';
         // quadro inicial de cada estado; o laço principal cuida da animação
-        quadro(estado === 'dormindo' ? 10 : (estado === 'andando' || estado === 'cacando') ? 4 : 0);
+        const movendo = estado === 'andando' || estado === 'cacando' || estado === 'escalando';
+        const noAr = estado === 'carregado' || estado === 'caindo';
+        quadro(estado === 'dormindo' ? 10 : movendo ? 4 : noAr ? 12 : 0);
     }
 
     function definirEstado(estado) {
@@ -925,6 +943,7 @@
         gatoEl.style.setProperty('--x', gato.x.toFixed(1) + 'px');
         gatoEl.style.setProperty('--y', (-gato.y).toFixed(1) + 'px');
         gatoEl.style.setProperty('--dir', gato.dir);
+        gatoEl.style.setProperty('--giro', gato.giro.toFixed(1) + 'deg');
     }
 
     function falar(texto, duracao = 2400) {
@@ -986,11 +1005,12 @@
         gatoEl.classList.add('pulo');
     });
 
-    // Dá para pegar o gato no colo e soltar em outro lugar: ele cai de pé
+    // Dá para pegar o gato pelo cangote e soltar em outro lugar. No ar ele chuta
+    // as patas e balança como um pêndulo, conforme o movimento do mouse.
     let colo = null;
     gatoEl.addEventListener('pointerdown', (evento) => {
         if (evento.button !== 0 || !animado) return;
-        colo = { px: evento.clientX, py: evento.clientY, ativo: false };
+        colo = { px: evento.clientX, py: evento.clientY, ultimoX: evento.clientX, ativo: false };
         gatoEl.setPointerCapture(evento.pointerId);
     });
     gatoEl.addEventListener('pointermove', (evento) => {
@@ -998,11 +1018,17 @@
         if (!colo.ativo) {
             if (Math.hypot(evento.clientX - colo.px, evento.clientY - colo.py) < 6) return;
             colo.ativo = true;
+            gato.apoio = null;
+            gato.subida = null;
+            gato.balanco = 0;
+            gato.vBalanco = 0;
             definirEstado('carregado');
-            falar('ei! me põe no chão', 1500);
+            falar(sortear(['ei! me põe no chão', 'miau?!', 'cuidado comigo', 'me solta, humano']), 1500);
         }
+        gato.vBalanco += (evento.clientX - colo.ultimoX) * 7; // o corpo fica para trás e balança
+        colo.ultimoX = evento.clientX;
         gato.x = Math.max(0, Math.min(limite(), evento.clientX - LARGURA_GATO / 2));
-        gato.y = Math.max(0, innerHeight - evento.clientY - 42);
+        gato.y = Math.max(0, innerHeight - evento.clientY - 62);
         posicionarGato();
     });
     function soltarGato() {
@@ -1011,6 +1037,8 @@
             ignorarClique = true;
             setTimeout(() => { ignorarClique = false; }, 80);
             gato.vy = 0;
+            gato.giro = 0;
+            gato.ignora = null;
             definirEstado('caindo');
             desbloquear('janela');
         }
@@ -1018,6 +1046,69 @@
     }
     gatoEl.addEventListener('pointerup', soltarGato);
     gatoEl.addEventListener('pointercancel', soltarGato);
+
+    /* ---------- Lugares onde o gato sobe ---------- */
+    const APOIOS = '#janela-terminal, .projeto, .nivel, #janela-projeto, #painel-conquistas';
+    // Com o gato de lado (escalando), as patas ficam a esta distância da borda dele
+    const PATAS_DE_LADO = LARGURA_GATO / 2 + 42;
+
+    // Caixas visíveis na tela cujo topo fica numa altura em que o gato cabe
+    function apoiosVisiveis() {
+        const lista = [];
+        document.querySelectorAll(APOIOS).forEach((el) => {
+            const r = el.getBoundingClientRect();
+            if (r.width < 90 || r.top < 90 || r.top > innerHeight - 110) return;
+            lista.push({ el, r });
+        });
+        return lista;
+    }
+
+    // Escolhe uma caixa e um lado por onde dá para subir sem sair da tela
+    function planoDeSubida() {
+        const opcoes = [];
+        apoiosVisiveis().forEach(({ el, r }) => {
+            if (r.left - PATAS_DE_LADO >= 0) opcoes.push({ el, lado: 'esq', x: r.left - PATAS_DE_LADO });
+            if (r.right - 10 <= limite()) opcoes.push({ el, lado: 'dir', x: r.right - 10 });
+        });
+        return opcoes.length ? sortear(opcoes) : null;
+    }
+
+    function subirEm(el, r) {
+        gato.apoio = el;
+        gato.apoioX = r.left;
+        gato.y = innerHeight - r.top;
+        gato.giro = 0;
+        gato.ignora = null;
+        gato.subida = null;
+    }
+
+    // Larga o apoio e cai (na frente dele, sem pousar de novo no mesmo lugar)
+    function saltar() {
+        gato.ignora = gato.apoio;
+        gato.apoio = null;
+        gato.subida = null;
+        gato.giro = 0;
+        gato.vy = 0;
+        definirEstado('caindo');
+    }
+
+    // Enquanto está em cima de uma caixa, o gato acompanha a rolagem e o arrasto dela
+    function acompanharApoio() {
+        const r = gato.apoio.getBoundingClientRect();
+        if (!gato.apoio.isConnected || r.width === 0 || r.top < 70 || r.top > innerHeight - 20) {
+            saltar();
+            return false;
+        }
+        gato.x += r.left - gato.apoioX;
+        gato.apoioX = r.left;
+        gato.y = innerHeight - r.top;
+        const centro = gato.x + LARGURA_GATO / 2;
+        if (centro < r.left - 4 || centro > r.right + 4) { // passou da ponta
+            saltar();
+            return false;
+        }
+        return true;
+    }
 
     /* ---------- Bugs ---------- */
     function criarBug(agora) {
@@ -1031,7 +1122,8 @@
         el.addEventListener('click', () => corrigirBug('voce'));
         palco.append(el);
         bug = { el, x: daEsquerda ? -40 : document.documentElement.clientWidth + 10, dir: daEsquerda ? 1 : -1 };
-        proximoBug = agora + (evento && evento.bugsRapidos ? aleatorio(7000, 12000) : aleatorio(14000, 24000));
+        // Bugs são raros, para o gato ter sossego entre um e outro
+        proximoBug = agora + (evento && evento.bugsRapidos ? aleatorio(40000, 70000) : aleatorio(75000, 140000));
     }
 
     function removerBug() {
@@ -1121,11 +1213,28 @@
             criarBug(agora);
         }
 
-        if (gato.estado === 'carregado') return;
+        if (gato.estado === 'carregado') {
+            // pêndulo: uma mola puxa o corpo de volta para o prumo
+            gato.vBalanco += (-45 * gato.balanco - 4 * gato.vBalanco) * dt;
+            gato.balanco = Math.max(-55, Math.min(55, gato.balanco + gato.vBalanco * dt));
+            gato.giro = gato.balanco + 4 * Math.sin(agora / 180);
+            posicionarGato();
+            return;
+        }
+
         if (gato.estado === 'caindo') {
+            const antes = gato.y;
             gato.vy += 2200 * dt;
-            gato.y = Math.max(0, gato.y - gato.vy * dt);
-            if (gato.y === 0) {
+            gato.y = Math.max(0, antes - gato.vy * dt);
+            // pousa na primeira caixa que estiver no caminho (a não ser que haja bug para caçar)
+            const centro = gato.x + LARGURA_GATO / 2;
+            const pouso = bug ? null : apoiosVisiveis().find(({ el, r }) => {
+                const topo = innerHeight - r.top;
+                return el !== gato.ignora && centro > r.left + 6 && centro < r.right - 6 && antes >= topo && gato.y <= topo;
+            });
+            if (pouso) subirEm(pouso.el, pouso.r);
+            if (pouso || gato.y === 0) {
+                gato.ignora = null;
                 definirEstado('sentado');
                 gato.ate = agora + 1800;
                 falar(sortear(['pouso perfeito', 'gato sempre cai de pé', 'de novo!']), 1600);
@@ -1134,7 +1243,39 @@
             return;
         }
 
+        if (gato.estado === 'escalando') {
+            const { el, lado } = gato.subida;
+            const r = el.getBoundingClientRect();
+            if (bug || !el.isConnected || r.width === 0 || r.top < 90 || r.top > innerHeight - 110) {
+                saltar(); // desistiu no meio do caminho
+            } else {
+                gato.x = lado === 'esq' ? r.left - PATAS_DE_LADO : r.right - 10;
+                // pula até alcançar a caixa e depois sobe devagar pela lateral
+                const agarra = innerHeight - r.bottom - 50;
+                gato.y += (gato.y < agarra ? 380 : 60) * dt;
+                if (gato.y + 42 >= innerHeight - r.top) {
+                    subirEm(el, r);
+                    gato.x = lado === 'esq' ? r.left + 4 : r.right - LARGURA_GATO - 4;
+                    gato.x = Math.max(0, Math.min(limite(), gato.x));
+                    descansar(agora);
+                    if (Math.random() < 0.6) falar(sortear(['daqui eu vejo tudo', 'território conquistado', 'vista boa aqui de cima']), 2000);
+                }
+            }
+            posicionarGato();
+            return;
+        }
+
+        if (gato.apoio && !acompanharApoio()) {
+            posicionarGato();
+            return;
+        }
+
         if (bug && gato.estado !== 'cacando') {
+            if (gato.apoio) { // desce primeiro, caça depois
+                saltar();
+                posicionarGato();
+                return;
+            }
             definirEstado('cacando');
             falar('!', 900);
         }
@@ -1148,9 +1289,35 @@
                 if (Math.abs(gato.x + LARGURA_GATO / 2 - (bug.x + 18)) < 26) corrigirBug('gato');
             }
         } else if (gato.estado === 'andando') {
-            if (moverPara(gato.alvo, 55, dt)) descansar(agora);
+            if (moverPara(gato.alvo, 55, dt)) {
+                if (gato.subida) {
+                    gato.dir = gato.subida.lado === 'esq' ? 1 : -1;
+                    gato.giro = gato.subida.lado === 'esq' ? -90 : 90;
+                    definirEstado('escalando');
+                } else {
+                    descansar(agora);
+                }
+            }
         } else if (agora > gato.ate) {
-            gato.alvo = aleatorio(8, limite());
+            if (gato.apoio) {
+                // em cima de uma caixa: passeia por ela ou vai até a ponta e desce
+                const r = gato.apoio.getBoundingClientRect();
+                const sobra = r.width - LARGURA_GATO;
+                if (sobra > 60 && Math.random() < 0.55) {
+                    gato.alvo = aleatorio(r.left - 10, r.right - LARGURA_GATO + 10);
+                } else if (r.left - LARGURA_GATO / 2 - 12 >= 0) {
+                    gato.alvo = r.left - LARGURA_GATO / 2 - 12;
+                } else if (r.right - LARGURA_GATO / 2 + 12 <= limite()) {
+                    gato.alvo = r.right - LARGURA_GATO / 2 + 12;
+                } else {
+                    saltar();
+                    posicionarGato();
+                    return;
+                }
+            } else {
+                gato.subida = Math.random() < 0.4 ? planoDeSubida() : null;
+                gato.alvo = gato.subida ? gato.subida.x : aleatorio(8, limite());
+            }
             definirEstado('andando');
         }
 
@@ -1205,7 +1372,7 @@
     definirEstado('sentado');
     prepararEvento();
     gato.ate = performance.now() + (evento ? 5500 : 2500);
-    proximoBug = performance.now() + aleatorio(7000, 11000);
+    proximoBug = performance.now() + aleatorio(45000, 75000);
 
     if (animado) {
         digitarTerminal();
