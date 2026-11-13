@@ -229,8 +229,22 @@
     const btnConquistas = $('#btn-conquistas');
     const painel = $('#painel-conquistas');
 
+    // Mostra "Role para ver mais" enquanto houver conquistas escondidas abaixo
+    const painelMais = $('#painel-mais');
+    function avisarMais() {
+        const falta = listaConquistas.scrollHeight - listaConquistas.clientHeight - listaConquistas.scrollTop;
+        painelMais.hidden = falta < 4;
+    }
+    listaConquistas.addEventListener('scroll', avisarMais, { passive: true });
+
     function abrirPainel(abrir) {
         painel.hidden = !abrir;
+        if (abrir) {
+            // O painel nunca passa do fim da tela; o que não couber rola por dentro
+            const espaco = innerHeight - $('.topo').getBoundingClientRect().bottom - 24;
+            painel.style.maxHeight = Math.max(220, espaco) + 'px';
+            avisarMais();
+        }
         btnConquistas.setAttribute('aria-expanded', String(abrir));
     }
     btnConquistas.addEventListener('click', () => abrirPainel(painel.hidden));
