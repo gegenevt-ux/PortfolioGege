@@ -977,14 +977,9 @@ button {
     cursor: grabbing;
 }
 
+/* No colo, o corpo gira em torno do cangote (onde o mouse segura) */
 .gato[data-estado="carregado"] .gato-corpo {
-    animation: balancar 0.5s ease-in-out infinite alternate;
-    transform-origin: top center;
-}
-
-@keyframes balancar {
-    from { transform: scaleX(var(--dir, 1)) rotate(-7deg); }
-    to { transform: scaleX(var(--dir, 1)) rotate(7deg); }
+    transform-origin: 50% 22%;
 }
 
 .gato-corpo {
@@ -994,7 +989,8 @@ button {
     position: relative;
     gap: 4px;
     height: 84px;
-    transform: scaleX(var(--dir, 1));
+    /* --giro inclina o corpo: de lado ao escalar, balançando no colo */
+    transform: rotate(var(--giro, 0deg)) scaleX(var(--dir, 1));
 }
 
 /* Um quadro da folha de sprites por vez; "pixelated" mantém os quadradinhos nítidos */
