@@ -30,7 +30,7 @@
             </ul>
             <div class="hud">
                 <span class="hud-item" title="Bugs corrigidos nesta página">Bugs <strong id="conta-bugs">0</strong></span>
-                <button class="hud-botao" id="btn-conquistas" type="button" aria-expanded="false" aria-controls="painel-conquistas">Conquistas <strong id="conta-conquistas">0/7</strong></button>
+                <button class="hud-botao" id="btn-conquistas" type="button" aria-expanded="false" aria-controls="painel-conquistas">Conquistas <strong id="conta-conquistas">0/8</strong></button>
                 <button class="hud-botao" id="btn-animacoes" type="button" aria-pressed="true">Animações: ligadas</button>
             </div>
         </div>
@@ -85,52 +85,52 @@ carregando back-end com Python e C#...</pre>
         <section id="projetos" class="container secao" data-conquista="projetos">
             <p class="rotulo">Fase 01</p>
             <h2>Projetos</h2>
-            <p class="secao-intro">Trabalhos da faculdade e estudos pessoais. O código de todos está aberto no GitHub.</p>
+            <p class="secao-intro">Trabalhos da faculdade e estudos pessoais. O código de todos está aberto no GitHub. Clique em um projeto para ver os detalhes.</p>
 
             <ul class="projetos">
                 <li>
-                    <a class="projeto" href="https://github.com/gegenevt-ux/Prototipo---Extens-o-I" target="_blank" rel="noopener">
+                    <a class="projeto" data-projeto="eco" href="https://github.com/gegenevt-ux/Prototipo---Extens-o-I" target="_blank" rel="noopener">
                         <span class="projeto-num">Missão 01</span>
                         <h3>EcoAction</h3>
                         <p>Protótipo de um app que conecta voluntários a ações socioambientais: feed de ações, inscrição, chat e painel do organizador. Feito no projeto de Extensão I.</p>
                         <span class="tecnologias"><span>HTML</span><span>CSS</span><span>JavaScript</span></span>
-                        <span class="projeto-ir">Abrir repositório <span aria-hidden="true">→</span></span>
+                        <span class="projeto-ir">Ver detalhes <span aria-hidden="true">→</span></span>
                     </a>
                 </li>
                 <li>
-                    <a class="projeto" href="https://github.com/gegenevt-ux/Sistema_Gest-o_Academia" target="_blank" rel="noopener">
+                    <a class="projeto" data-projeto="academia" href="https://github.com/gegenevt-ux/Sistema_Gest-o_Academia" target="_blank" rel="noopener">
                         <span class="projeto-num">Missão 02</span>
                         <h3>Gestão de Academia</h3>
                         <p>Site de uma academia com cadastro e listagem de alunos e instrutores, tema claro e escuro.</p>
                         <span class="tecnologias"><span>HTML</span><span>Bootstrap</span></span>
-                        <span class="projeto-ir">Abrir repositório <span aria-hidden="true">→</span></span>
+                        <span class="projeto-ir">Ver detalhes <span aria-hidden="true">→</span></span>
                     </a>
                 </li>
                 <li>
-                    <a class="projeto" href="https://github.com/gegenevt-ux/COONEXAOTECH" target="_blank" rel="noopener">
+                    <a class="projeto" data-projeto="karaoke" href="https://github.com/gegenevt-ux/COONEXAOTECH" target="_blank" rel="noopener">
                         <span class="projeto-num">Missão 03</span>
                         <h3>Catálogo de Karaokê</h3>
                         <p>Aplicação para navegar por um catálogo de músicas de karaokê e encontrar a próxima para cantar.</p>
                         <span class="tecnologias"><span>Python</span><span>Streamlit</span><span>pandas</span></span>
-                        <span class="projeto-ir">Abrir repositório <span aria-hidden="true">→</span></span>
+                        <span class="projeto-ir">Ver detalhes <span aria-hidden="true">→</span></span>
                     </a>
                 </li>
                 <li>
-                    <a class="projeto" href="https://github.com/gegenevt-ux/SapiensBankGG" target="_blank" rel="noopener">
+                    <a class="projeto" data-projeto="banco" href="https://github.com/gegenevt-ux/SapiensBankGG" target="_blank" rel="noopener">
                         <span class="projeto-num">Missão 04</span>
                         <h3>SapiensBank</h3>
                         <p>Banco no terminal: criar conta, listar contas, sacar, depositar e ajustar limite. Projeto acadêmico de orientação a objetos.</p>
                         <span class="tecnologias"><span>C#</span><span>.NET</span></span>
-                        <span class="projeto-ir">Abrir repositório <span aria-hidden="true">→</span></span>
+                        <span class="projeto-ir">Ver detalhes <span aria-hidden="true">→</span></span>
                     </a>
                 </li>
                 <li>
-                    <a class="projeto" href="https://github.com/gegenevt-ux/mockup_sistema_vendas" target="_blank" rel="noopener">
+                    <a class="projeto" data-projeto="vendas" href="https://github.com/gegenevt-ux/mockup_sistema_vendas" target="_blank" rel="noopener">
                         <span class="projeto-num">Missão 05 <em class="selo">Em andamento</em></span>
                         <h3>Sistema de Vendas</h3>
                         <p>Mockup da navegação de um sistema de vendas, com áreas de clientes, produtos e pedidos.</p>
                         <span class="tecnologias"><span>HTML</span><span>Bootstrap</span></span>
-                        <span class="projeto-ir">Abrir repositório <span aria-hidden="true">→</span></span>
+                        <span class="projeto-ir">Ver detalhes <span aria-hidden="true">→</span></span>
                     </a>
                 </li>
             </ul>
@@ -197,6 +197,19 @@ carregando back-end com Python e C#...</pre>
             <a href="#inicio">Voltar ao topo</a>
         </div>
     </footer>
+
+    <!-- Janela de detalhes de um projeto (o conteúdo vem do script.js) -->
+    <div class="janela" id="janela-projeto" role="dialog" aria-labelledby="janela-titulo" hidden>
+        <div class="janela-topo">
+            <button class="tb tb-fechar" id="janela-fechar" type="button" aria-label="Fechar a janela"></button>
+            <p id="janela-titulo"></p>
+        </div>
+        <div class="abas" id="janela-abas" role="tablist" aria-label="Detalhes do projeto"></div>
+        <div class="janela-corpo" id="janela-corpo" role="tabpanel" tabindex="0"></div>
+        <div class="janela-rodape">
+            <a class="botao" id="janela-link" href="#" target="_blank" rel="noopener">Abrir repositório</a>
+        </div>
+    </div>
 
     <!-- Avisos de conquista -->
     <div class="avisos" id="avisos" aria-live="polite"></div>
