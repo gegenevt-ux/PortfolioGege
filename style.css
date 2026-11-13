@@ -273,9 +273,37 @@ button {
     color: var(--tinta-suave);
 }
 
+.painel {
+    display: flex;
+    flex-direction: column;
+    max-height: 70vh; /* o script ajusta para o espaço que sobra abaixo do menu */
+}
+
+/* A lista rola por dentro do painel, com a barra sempre à vista */
 .painel ul {
+    flex: 1;
+    min-height: 120px;
     list-style: none;
     margin-top: 12px;
+    padding-right: 10px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--destaque) var(--superficie-2);
+}
+
+.painel-reiniciar {
+    flex: none;
+    align-self: flex-start;
+}
+
+/* Aviso de que a lista continua para baixo */
+.painel-mais {
+    flex: none;
+    padding-top: 8px;
+    border-top: 1px solid var(--destaque);
+    font-family: var(--fonte-mono);
+    font-size: 0.75rem;
+    color: var(--destaque);
 }
 
 .painel li {
@@ -804,7 +832,8 @@ button {
     padding: 20px;
     overflow-y: auto;
     background: var(--fundo);
-    scrollbar-color: var(--linha) var(--fundo);
+    scrollbar-width: thin;
+    scrollbar-color: var(--destaque) var(--superficie-2);
 }
 
 .janela-corpo p + p {
